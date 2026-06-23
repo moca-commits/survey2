@@ -777,7 +777,7 @@
   document.getElementById('nameInput').addEventListener('input', updateProgress);
 
   // ─── Submit ───────────────────────────────────────────────────────
-  function submitForm() {
+  async function submitForm() {
     const name = document.getElementById('nameInput').value.trim();
     const nameError = document.getElementById('nameError');
 
@@ -796,15 +796,65 @@
     const note = document.getElementById('noteInput').value.trim() || '없음';
 
     const entry = { name, prefer, avoid, allergies, note, ts: new Date().toLocaleString('ko-KR') };
+
+    // 제출 버튼 로딩 상태
+    const btn = document.querySelector('.btn-submit');
+    btn.textContent = '저장 중...';
+    btn.disabled = true;
+
+    // Notion에 저장 (Claude API → Notion MCP)
+    const saved = await saveToNotion(entry);
+
+    // 로컬에도 백업 저장
     responses.push(entry);
     saveResponses(responses);
 
+    btn.textContent = '제출하기';
+    btn.disabled = false;
+
     document.getElementById('formArea').style.display = 'none';
     document.getElementById('successCard').style.display = 'block';
-    document.getElementById('successMsg').textContent = `${name}님의 응답이 저장되었습니다.\n협조해 주셔서 감사합니다 🙏`;
+    document.getElementById('successMsg').textContent = saved
+      ? name + '님의 응답이 Notion에 저장되었습니다.\n협조해 주셔서 감사합니다 🙏'
+      : name + '님의 응답이 저장되었습니다 (로컬 백업).\n협조해 주셔서 감사합니다 🙏';
     document.getElementById('resultsToggle').style.display = 'block';
 
     renderResults();
+  }
+
+  // Notion 저장 함수 (Claude API → Notion MCP)
+  async function saveToNotion(entry) {
+    try {
+      const prompt = `Notion 데이터베이스(이름: "직원 식사 취향 설문")에 다음 응답을 새 페이지로 추가해줘. 데이터베이스가 없으면 워크스페이스에 새로 만들어줘.
+데이터:
+- 이름: ${entry.name}
+- 선호: ${entry.prefer}
+- 비선호: ${entry.avoid}
+- 제약조건/알러지: ${entry.allergies}
+- 비고: ${entry.note}
+- 응답시간: ${entry.ts}
+
+데이터베이스 속성: 이름(title), 선호(rich_text), 비선호(rich_text), 제약조건(rich_text), 비고(rich_text), 응답시간(rich_text)
+성공하면 "SUCCESS", 실패하면 "FAIL"만 답해.`;
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          mcp_servers: [{ type: 'url', url: 'https://mcp.notion.com/mcp', name: 'notion' }],
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      const data = await res.json();
+      const text = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
+      return text.includes('SUCCESS');
+    } catch (e) {
+      console.error('Notion 저장 실패:', e);
+      return false;
+    }
   }
 
   // ─── Reset ────────────────────────────────────────────────────────
