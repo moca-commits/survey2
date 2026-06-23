@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직원 식사 취향 설문조사</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --ink: #1A1A1A;
+    --ink-muted: #6B6560;
+    --accent: #E8622A;
+    --accent-light: #FDF0EA;
+    --border: #E2DDD8;
+    --tag-bg: #EEF0F8;
+    --tag-text: #3A4A8C;
+    --success: #2E7D5A;
+    --success-bg: #EAF5EF;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 40px 16px 80px;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .header-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .header p {
+    font-size: 14px;
+    color: var(--ink-muted);
+    line-height: 1.7;
+  }
+
+  /* Progress */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* Step indicator */
+  .step-indicator {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  /* Section */
+  .section {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .section h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .section-desc {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  /* Form elements */
+  .field {
+    margin-bottom: 20px;
+  }
+
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  label span.req {
+    color: var(--accent);
+    margin-left: 2px;
+  }
+
+  input[type="text"],
+  textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--bg);
+    transition: border-color 0.2s;
+    outline: none;
+    resize: none;
+  }
+
+  input[type="text"]:focus,
+  textarea:focus {
+    border-color: var(--accent);
+    background: #fff;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #BBB5B0;
+  }
+
+  /* Tag chip selector */
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--ink-muted);
+    user-select: none;
+  }
+
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chip.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  .chip-add-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .chip-add-row input {
+    flex: 1;
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .chip-add-btn {
+    padding: 9px 16px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+
+  .chip-add-btn:hover { opacity: 0.8; }
+
+  /* Allergy grid */
+  .allergy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .allergy-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  .allergy-item:hover {
+    border-color: var(--accent);
+  }
+
+  .allergy-item.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .allergy-item input[type="checkbox"] {
+    display: none;
+  }
+
+  .check-icon {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .allergy-item.selected .check-icon {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .check-icon svg {
+    display: none;
+  }
+
+  .allergy-item.selected .check-icon svg {
+    display: block;
+  }
+
+  /* Submit button */
+  .submit-area {
+    margin-top: 32px;
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-submit:hover {
+    background: #D0521E;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(232,98,42,0.3);
+  }
+
+  .btn-submit:active {
+    transform: translateY(0);
+  }
+
+  /* Success state */
+  .success-card {
+    display: none;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 48px 32px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .success-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--success-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+  }
+
+  .success-card h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .success-card p {
+    font-size: 14px;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+
+  .btn-again {
+    padding: 12px 28px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn-again:hover { opacity: 0.75; }
+
+  /* Results toggle */
+  .results-toggle {
+    text-align: center;
+    margin-top: 24px;
+  }
+
+  .btn-results {
+    padding: 10px 22px;
+    background: transparent;
+    color: var(--ink-muted);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-results:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  /* Results panel */
+  .results-panel {
+    display: none;
+    margin-top: 32px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .results-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .results-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .results-count {
+    font-size: 12px;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  .results-list {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .result-row {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .result-row:last-child { border-bottom: none; }
+
+  .result-name {
+    font-size: 13px;
+    font-weight: 700;
+    padding-top: 2px;
+  }
+
+  .result-details {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--ink-muted);
+  }
+
+  .tag-inline {
+    display: inline-block;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  .tag-inline.red {
+    background: #FEE9E2;
+    color: #C0401A;
+  }
+
+  .btn-export {
+    margin: 16px 24px;
+    padding: 10px 18px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn-export:hover { opacity: 0.75; }
+
+  /* Validation */
+  .field-error {
+    font-size: 12px;
+    color: #C0401A;
+    margin-top: 6px;
+  }
+
+  input.error, textarea.error {
+    border-color: #C0401A;
+  }
+
+  @media (max-width: 480px) {
+    .allergy-grid { grid-template-columns: 1fr; }
+    .section { padding: 24px 20px; }
+    .header h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-eyebrow">🍽 Team Meal Survey</div>
+    <h1>직원 식사 취향 &<br>알러지 조사</h1>
+    <p>팀 점심 메뉴 선정을 위한 취향 및 식이 제한 정보를 수집합니다.<br>솔직하게 답변해 주시면 모두가 만족하는 식사를 준비할 수 있어요.</p>
+  </div>
+
+  <!-- Form -->
+  <div id="formArea">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+    <!-- Step 1: 기본 정보 -->
+    <div class="section">
+      <div class="section-label">기본 정보</div>
+      <h2>이름을 알려주세요</h2>
+      <p class="section-desc">제출 후 데이터에 표시됩니다.</p>
+
+      <div class="field">
+        <label for="nameInput">이름 / 닉네임 <span class="req">*</span></label>
+        <input type="text" id="nameInput" placeholder="예) 김대리, 이책임" maxlength="20">
+        <div class="field-error" id="nameError"></div>
+      </div>
+    </div>
+
+    <!-- Step 2: 선호 음식 -->
+    <div class="section">
+      <div class="section-label">선호 음식</div>
+      <h2>좋아하는 음식 종류를 선택하세요</h2>
+      <p class="section-desc">여러 개 선택 가능합니다. 없으면 직접 추가해 주세요.</p>
+
+      <div class="chip-group" id="preferChips">
+        <div class="chip" onclick="toggleChip(this,'prefer')">한식</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">일식</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">중식</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">양식</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">분식</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">샐러드</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">고기</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">덮밥</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">국물</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">샌드위치</div>
+        <div class="chip" onclick="toggleChip(this,'prefer')">버거</div>
+      </div>
+      <div class="chip-add-row">
+        <input type="text" id="preferCustomInput" placeholder="직접 입력 후 추가" maxlength="15">
+        <button class="chip-add-btn" onclick="addCustomChip('prefer')">+ 추가</button>
+      </div>
+    </div>
+
+    <!-- Step 3: 비선호 음식 -->
+    <div class="section">
+      <div class="section-label">비선호 음식</div>
+      <h2>피하고 싶은 음식을 선택하세요</h2>
+      <p class="section-desc">여러 개 선택 가능합니다.</p>
+
+      <div class="chip-group" id="avoidChips">
+        <div class="chip" onclick="toggleChip(this,'avoid')">매운음식</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">기름진 음식</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">해산물</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">면류</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">국물</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">치즈</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">생선</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">샐러드만</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">고수</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">대기 긴 곳</div>
+        <div class="chip" onclick="toggleChip(this,'avoid')">시끄러운 곳</div>
+      </div>
+      <div class="chip-add-row">
+        <input type="text" id="avoidCustomInput" placeholder="직접 입력 후 추가" maxlength="15">
+        <button class="chip-add-btn" onclick="addCustomChip('avoid')">+ 추가</button>
+      </div>
+    </div>
+
+    <!-- Step 4: 제약조건 / 알러지 -->
+    <div class="section">
+      <div class="section-label">식이 제한 & 알러지</div>
+      <h2>해당하는 항목을 모두 선택하세요</h2>
+      <p class="section-desc">없으면 그냥 넘어가세요. 건강과 안전을 위한 정보입니다.</p>
+
+      <div class="allergy-grid" id="allergyGrid">
+        <label class="allergy-item" onclick="toggleAllergy(this)">
+          <input type="checkbox">
+          <div class="check-icon">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          🦐 새우 알러지
+        </label>
+        <label class="allergy-item" onclick="toggleAllergy(this)">
+          <input type="checkbox">
+          <div class="check-icon">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          🥜 견과류 알러지
+        </label>
+        <label class="allergy-item" onclick="toggleAllergy(this)">
+          <input type="checkbox">
+          <div class="check-icon">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          🥛 유당 민감 / 유제품
+        </label>
+        <label class="allergy-item" onclick="toggleAllergy(this)">
+          <input type="checkbox">
+          <div class="check-icon">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          🌾 글루텐 민감
+        </label>
+        <label class="allergy-item" onclick="toggleAllergy(this)">
+          <input type="checkbox">
+          <div class="check-icon">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          🥚 달걀 알러지
+        </label>
+        <label class="allergy-item" onclick="toggleAllergy(this)">
+          <input type="checkbox">
+          <div class="check-icon">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          🐟 생선 알러지
+        </label>
+        <label class="allergy-item" onclick="toggleAllergy(this)">
+          <input type="checkbox">
+          <div class="check-icon">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          🥩 채식 지향
+        </label>
+        <label class="allergy-item" onclick="toggleAllergy(this)">
+          <input type="checkbox">
+          <div class="check-icon">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          ✡️ 할랄 / 코셔
+        </label>
+      </div>
+
+      <div class="chip-add-row" style="margin-top:12px;">
+        <input type="text" id="allergyCustomInput" placeholder="기타 알러지 직접 입력" maxlength="20">
+        <button class="chip-add-btn" onclick="addCustomAllergy()">+ 추가</button>
+      </div>
+    </div>
+
+    <!-- Step 5: 비고 -->
+    <div class="section">
+      <div class="section-label">기타 사항</div>
+      <h2>추가로 알려주실 사항이 있나요?</h2>
+      <p class="section-desc">식사 시간, 복귀 시간, 장소 선호, 예산, 동반 고객 여부 등 자유롭게 적어주세요.</p>
+
+      <div class="field">
+        <label for="noteInput">비고 (선택)</label>
+        <textarea id="noteInput" rows="3" placeholder="예) 12:50 전 복귀 필요, 조용한 장소 선호, 영수증 필요"></textarea>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="submit-area">
+      <button class="btn-submit" onclick="submitForm()">제출하기</button>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div class="success-card" id="successCard">
+    <div class="success-icon">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 14L11 19L22 9" stroke="#2E7D5A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h2>제출 완료!</h2>
+    <p id="successMsg">응답이 저장되었습니다.<br>협조해 주셔서 감사합니다 🙏</p>
+    <button class="btn-again" onclick="resetForm()">다른 사람 응답하기</button>
+  </div>
+
+  <!-- Results toggle -->
+  <div class="results-toggle" id="resultsToggle" style="display:none;">
+    <button class="btn-results" onclick="toggleResults()">📋 제출된 응답 보기</button>
+  </div>
+
+  <!-- Results panel -->
+  <div class="results-panel" id="resultsPanel">
+    <div class="results-header">
+      <h3>수집된 응답</h3>
+      <span class="results-count" id="resultsCount">0명</span>
+    </div>
+    <div class="results-list" id="resultsList"></div>
+    <button class="btn-export" onclick="exportCSV()">CSV로 내보내기</button>
+  </div>
+
+</div>
+
+<script>
+  // ─── State ───────────────────────────────────────────────────────
+  const STORAGE_KEY = 'meal_survey_responses';
+
+  function loadResponses() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+
+  function saveResponses(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
+
+  let responses = loadResponses();
+
+  // ─── Chip toggle ─────────────────────────────────────────────────
+  function toggleChip(el, type) {
+    el.classList.toggle('selected');
+    updateProgress();
+  }
+
+  function addCustomChip(type) {
+    const inputId = type === 'prefer' ? 'preferCustomInput' : 'avoidCustomInput';
+    const groupId = type === 'prefer' ? 'preferChips' : 'avoidChips';
+    const input = document.getElementById(inputId);
+    const val = input.value.trim();
+    if (!val) return;
+
+    const chip = document.createElement('div');
+    chip.className = 'chip selected';
+    chip.textContent = val;
+    chip.onclick = function() { toggleChip(this, type); };
+    document.getElementById(groupId).appendChild(chip);
+    input.value = '';
+    updateProgress();
+  }
+
+  // Enter key for chip add
+  document.getElementById('preferCustomInput').addEventListener('keydown', e => { if(e.key==='Enter') addCustomChip('prefer'); });
+  document.getElementById('avoidCustomInput').addEventListener('keydown', e => { if(e.key==='Enter') addCustomChip('avoid'); });
+
+  // ─── Allergy toggle ───────────────────────────────────────────────
+  function toggleAllergy(el) {
+    el.classList.toggle('selected');
+    updateProgress();
+  }
+
+  function addCustomAllergy() {
+    const input = document.getElementById('allergyCustomInput');
+    const val = input.value.trim();
+    if (!val) return;
+
+    const item = document.createElement('label');
+    item.className = 'allergy-item selected';
+    item.onclick = function() { toggleAllergy(this); };
+    item.innerHTML = `
+      <input type="checkbox" checked>
+      <div class="check-icon">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      ⚠️ ${val}
+    `;
+    document.getElementById('allergyGrid').appendChild(item);
+    input.value = '';
+    updateProgress();
+  }
+
+  document.getElementById('allergyCustomInput').addEventListener('keydown', e => { if(e.key==='Enter') addCustomAllergy(); });
+
+  // ─── Progress ─────────────────────────────────────────────────────
+  function updateProgress() {
+    const name = document.getElementById('nameInput').value.trim();
+    const preferSel = document.querySelectorAll('#preferChips .chip.selected').length;
+    const avoidSel = document.querySelectorAll('#avoidChips .chip.selected').length;
+
+    let score = 0;
+    if (name) score += 40;
+    if (preferSel > 0) score += 30;
+    if (avoidSel > 0) score += 20;
+    score = Math.min(score + 10, 100);
+
+    document.getElementById('progressFill').style.width = score + '%';
+  }
+
+  document.getElementById('nameInput').addEventListener('input', updateProgress);
+
+  // ─── Submit ───────────────────────────────────────────────────────
+  function submitForm() {
+    const name = document.getElementById('nameInput').value.trim();
+    const nameError = document.getElementById('nameError');
+
+    if (!name) {
+      nameError.textContent = '이름을 입력해 주세요.';
+      document.getElementById('nameInput').classList.add('error');
+      document.getElementById('nameInput').focus();
+      return;
+    }
+    nameError.textContent = '';
+    document.getElementById('nameInput').classList.remove('error');
+
+    const prefer = [...document.querySelectorAll('#preferChips .chip.selected')].map(c => c.textContent).join(', ') || '없음';
+    const avoid = [...document.querySelectorAll('#avoidChips .chip.selected')].map(c => c.textContent).join(', ') || '없음';
+    const allergies = [...document.querySelectorAll('#allergyGrid .allergy-item.selected')].map(a => a.textContent.trim()).join(', ') || '없음';
+    const note = document.getElementById('noteInput').value.trim() || '없음';
+
+    const entry = { name, prefer, avoid, allergies, note, ts: new Date().toLocaleString('ko-KR') };
+    responses.push(entry);
+    saveResponses(responses);
+
+    document.getElementById('formArea').style.display = 'none';
+    document.getElementById('successCard').style.display = 'block';
+    document.getElementById('successMsg').textContent = `${name}님의 응답이 저장되었습니다.\n협조해 주셔서 감사합니다 🙏`;
+    document.getElementById('resultsToggle').style.display = 'block';
+
+    renderResults();
+  }
+
+  // ─── Reset ────────────────────────────────────────────────────────
+  function resetForm() {
+    document.getElementById('nameInput').value = '';
+    document.getElementById('noteInput').value = '';
+    document.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.allergy-item.selected').forEach(a => a.classList.remove('selected'));
+    document.getElementById('progressFill').style.width = '0%';
+
+    document.getElementById('successCard').style.display = 'none';
+    document.getElementById('formArea').style.display = 'block';
+    document.getElementById('resultsPanel').style.display = 'none';
+  }
+
+  // ─── Results ──────────────────────────────────────────────────────
+  function toggleResults() {
+    const panel = document.getElementById('resultsPanel');
+    const isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    renderResults();
+  }
+
+  function renderResults() {
+    const list = document.getElementById('resultsList');
+    document.getElementById('resultsCount').textContent = responses.length + '명';
+    list.innerHTML = '';
+
+    if (responses.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:#aaa;font-size:13px;">아직 응답이 없습니다.</div>';
+      return;
+    }
+
+    responses.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'result-row';
+      row.innerHTML = `
+        <div class="result-name">${r.name}</div>
+        <div class="result-details">
+          <span class="tag-inline">선호</span>${r.prefer}<br>
+          <span class="tag-inline">비선호</span>${r.avoid}<br>
+          ${r.allergies !== '없음' ? `<span class="tag-inline red">제약</span>${r.allergies}<br>` : ''}
+          ${r.note !== '없음' ? `<span style="color:#999">💬 ${r.note}</span>` : ''}
+        </div>
+      `;
+      list.appendChild(row);
+    });
+  }
+
+  // ─── Export CSV ───────────────────────────────────────────────────
+  function exportCSV() {
+    const header = '이름,선호,비선호,제약조건,비고,응답시간';
+    const rows = responses.map(r =>
+      [r.name, r.prefer, r.avoid, r.allergies, r.note, r.ts]
+        .map(v => `"${v.replace(/"/g,'""')}"`)
+        .join(',')
+    );
+    const csv = '\uFEFF' + [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '직원취향_알러지_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+  }
+
+  // Init
+  if (responses.length > 0) {
+    document.getElementById('resultsToggle').style.display = 'block';
+  }
+</script>
+</body>
+</html>
