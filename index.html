@@ -714,9 +714,23 @@
 
   // ─── Allergy toggle ───────────────────────────────────────────────
   function toggleAllergy(el) {
-    el.classList.toggle('selected');
+    const item = el.closest('.allergy-item');
+    if (!item) return;
+    item.classList.toggle('selected');
     updateProgress();
   }
+
+  // DOMContentLoaded에서 직접 addEventListener로 바인딩
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.allergy-item').forEach(function(item) {
+      item.removeAttribute('onclick');
+      item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        item.classList.toggle('selected');
+        updateProgress();
+      });
+    });
+  });
 
   function addCustomAllergy() {
     const input = document.getElementById('allergyCustomInput');
